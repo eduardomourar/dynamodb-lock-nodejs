@@ -1,0 +1,97 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+tolerations:
+  - effect: NoSchedule
+    key: app
+    operator: Exists
+
+node_selector:
+  app: drone
+
+service_account_name: drone-log-vendor-dynamodb-lock-nodejs
+
+environment:
+  AWS_REGION: eu-west-1
+
+image_pull_secrets:
+  - DOCKERCONFIG
+
+services:
+  - name: dynamodb
+    image: amazon/dynamodb-local
+
+node_js: &node_js
+  image: node:16.13.0
+  volumes:
+      - name: cache
+        path: /root/.cache
+  environment:
+    GITHUB_PKG_TOKEN:
+      from_secret: GITHUB_PACKAGES_TOKEN
+  when:
+    event:
+      - push
+      - pull_request
+      - tag
+
+steps:
+  - name: install
+    <<: *node_js
+    commands:
+      - sed 's/$${GITHUB_PKG_TOKEN}/'$$GITHUB_PKG_TOKEN'/g' .npmrc.dist > .npmrc
+      - yarn install
+
+  - name: prepare
+    <<: *node_js
+    commands:
+      - sed 's/$${GITHUB_PKG_TOKEN}/'$$GITHUB_PKG_TOKEN'/g' .npmrc.dist > .npmrc
+      - yarn prepare
+    depends_on:
+      - "install"
+
+  - name: test-lint
+    <<: *node_js
+    commands:
+      - yarn lint || exit 1
+    depends_on:
+      - "prepare"
+
+  - name: test-unit
+    <<: *node_js
+    commands:
+      - yarn test:unit || exit 1
+    depends_on:
+      - "prepare"
+
+  - name: test-e2e
+    <<: *node_js
+    commands:
+      - yarn test:e2e || exit 1
+    depends_on:
+      - "prepare"
+
+  - name: publish
+    <<: *node_js
+    commands:
+      - apt update
+      - DEBIAN_FRONTEND=noninteractive apt-get -yq install jq
+      - PACKAGE_VERSION=$(jq .version package.json -r)
+      - |
+        if [ $DRONE_TAG = v$PACKAGE_VERSION ]
+        then
+          echo "Pushed tag matches package version, publishing package"
+          npm publish
+        else
+          echo "Pushed tag does not match package version, will not publish package"
+        fi
+    when:
+      event:
+        - tag
+      ref:
+        - refs/tags/v*
+    depends_on:
+      - "test-lint"
+      - "test-unit"
+      - "test-e2e"

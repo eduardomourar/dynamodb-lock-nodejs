@@ -1,0 +1,16 @@
+version: '2.1'
+services:
+  log_vendor_npm_dynamodb_lock:
+    container_name: log_vendor_npm_dynamodb_lock
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - dynamodb
+    volumes:
+      - ./:/app
+  dynamodb:
+    image: amazon/dynamodb-local
+    container_name: dynamodb
+    ports:
+      - 8000:8000
