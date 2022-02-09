@@ -1,8 +1,8 @@
-## DynamoDB Lock Client for Typescript
+## DynamoDB Lock Client for Nodejs
 
 ### Introduction
 
-This is a distributed lock client for DynamoDB in Typescript. Implementation is following (not strictly) [DynamoDB Lock Client for Java](https://github.com/awslabs/amazon-dynamodb-lock-client). Session monitoring is not included. 
+Distributed lock client written in Node.js & Typescript for DynamoDB. Implementation is following (not strictly) [DynamoDB Lock Client for Java](https://github.com/awslabs/amazon-dynamodb-lock-client). Session monitoring is not included. 
 
 There is a `trustLocalTime` option to improve the performance. If `lastUpdatedTimeInMs` is in the past including `leaseDurationInMs` for a lock, the lock can be acquired immediately instead of waiting another `leaseDurationInMs` but the tradeoff is [`clock skew`](https://en.wikipedia.org/wiki/Clock_skew).
 
