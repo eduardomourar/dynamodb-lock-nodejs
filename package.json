@@ -39,6 +39,11 @@
     "peerDependencies": {
         "aws-sdk": "^2.1106.0"
     },
+    "peerDependenciesMeta": {
+        "aws-sdk": {
+            "optional": true
+        }
+    },
     "dependencies": {
         "uuid": "^8.3.2"
     }
