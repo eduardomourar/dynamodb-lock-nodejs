@@ -5,6 +5,9 @@
     "license": "MIT",
     "description": "Distributed locking library backed by DynamoDB.",
     "main": "./lib/index.js",
+    "files": [
+        "lib/"
+    ],
     "scripts": {
         "self-peers": "install-self-peers -- --ignore-scripts",
         "prepare": "yarn self-peers && yarn format && yarn lint && yarn compile",
@@ -35,6 +38,11 @@
     },
     "peerDependencies": {
         "aws-sdk": "^2.1106.0"
+    },
+    "peerDependenciesMeta": {
+        "aws-sdk": {
+            "optional": true
+        }
     },
     "dependencies": {
         "uuid": "^8.3.2"
